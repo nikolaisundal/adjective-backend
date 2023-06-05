@@ -42,10 +42,8 @@ def generate_text():
     )
     
     text = response.choices[0].text
-    print(text)
 
     formatted_text = text.strip()
     return jsonify({"text": formatted_text})
 
-if __name__ == '__main__':
-    app.run(debug=True)
+
