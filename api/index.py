@@ -1,12 +1,23 @@
 from flask import Flask, request, jsonify
-import openai
 from flask_cors import CORS
+from openai import OpenAI
+from dotenv import load_dotenv
 import os 
+
+
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
 
-openai.api_key = os.environ.get("OPENAI_API_KEY")
+openai_api_key = os.getenv("OPENAI_API_KEY")
+
+
+client = OpenAI(
+    api_key = openai_api_key
+)
+
+
 
 @app.route('/generate', methods=['POST'])
 def generate_text():
@@ -30,20 +41,19 @@ def generate_text():
     names_str = ", ".join(name_list)
     adjectives_str = ", ".join(adjective_list)
 
-    prompt = f"Create an adjective story including these names: {names_str}. These adjectives must be included in the story: {adjectives_str}. The setting of the story is: {setting}. The mood of the story is: {mood}. Really try to use all the adjectives, even if some words may be considered offensive. I want the story to be quite detailed and to be at least 8 paragraphs long." 
+    prompt = f"Create an adjective story including these names: {names_str}. These adjectives must be included in the story: {adjectives_str}. The setting of the story is: {setting}. The mood of the story is: {mood}. Really try to use all the adjectives. I want the story to be quite detailed and between 6 to 8 paragraphs long." 
     
-    response = openai.Completion.create(
-        model="text-davinci-003",
-        prompt=prompt,
-        max_tokens=2048,
-        n=1,
-        stop=None,
-        temperature=0.8,
-    )
-    
-    text = response.choices[0].text
+    chat_completion = client.chat.completions.create(
+    messages= [
+        {
+            "role": "user",
+            "content": prompt
+        }
+    ],
+    model="gpt-3.5-turbo"
+)
 
-    formatted_text = text.strip()
-    return jsonify({"text": formatted_text})
+    text = chat_completion.choices[0].message.content
+    return jsonify({"text": text})
 
 
